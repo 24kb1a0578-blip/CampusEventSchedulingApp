@@ -2,7 +2,8 @@ name: Deploy React Vite to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -28,24 +29,24 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        working-directory: ./campus-event-scheduling-main/f2
         run: npm ci
+        working-directory: campus-event-scheduling-main/f2
 
       - name: Build frontend
-        working-directory: ./campus-event-scheduling-main/f2
         run: npm run build
+        working-directory: campus-event-scheduling-main/f2
 
       - name: Upload build
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./campus-event-scheduling-main/f2/dist
+          path: campus-event-scheduling-main/f2/dist
 
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
 
     steps:
       - name: Deploy
