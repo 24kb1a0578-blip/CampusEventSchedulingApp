@@ -1,3 +1,4 @@
+
 name: Deploy React Vite to GitHub Pages
 
 on:
@@ -28,22 +29,47 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: campus-event-scheduling-main/f2
+      - name: Find and build frontend
+        run: |
+          echo "Repository root:"
+          pwd
+          echo "Repository contents:"
+          ls -la
 
-      - name: Build frontend
-        run: npm run build
-        working-directory: campus-event-scheduling-main/f2
+          echo "Searching for frontend package.json..."
+          find . -type f -name package.json \
+            -not -path '*/node_modules/*' -print
+
+          PACKAGE_FILE="$(find . -type f \
+            -path '*/f2/package.json' \
+            -not -path '*/node_modules/*' \
+            -print -quit)"
+
+          if [ -z "$PACKAGE_FILE" ]; then
+            echo "ERROR: Could not find f2/package.json"
+            exit 1
+          fi
+
+          FRONTEND_DIR="$(dirname "$PACKAGE_FILE")"
+          echo "Frontend directory: $FRONTEND_DIR"
+
+          cd "$FRONTEND_DIR"
+
+          npm ci
+          npm run build
+
+          mkdir -p "$GITHUB_WORKSPACE/site"
+          cp -a dist/. "$GITHUB_WORKSPACE/site/"
 
       - name: Upload build
         uses: actions/upload-pages-artifact@v3
         with:
-          path: campus-event-scheduling-main/f2/dist
+          path: site
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
